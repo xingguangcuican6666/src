@@ -585,9 +585,8 @@ public class WebappActivity extends SingleTabActivity {
     }
 
     private void initializeWebappData() {
-        if (mWebappInfo.displayMode() == WebDisplayMode.FULLSCREEN) {
-            enterImmersiveMode();
-        }
+        // Always enter immersive mode for webapp activity
+        enterImmersiveMode();
 
         ViewGroup contentView = (ViewGroup) findViewById(android.R.id.content);
         mSplashController.showSplashScreen(getActivityType(), contentView, mWebappInfo);
@@ -627,24 +626,24 @@ public class WebappActivity extends SingleTabActivity {
 
     @Override
     protected ChromeFullscreenManager createFullscreenManager() {
-        // Disable HTML5 fullscreen in PWA fullscreen mode.
+        // Disable HTML5 fullscreen in webapp fullscreen mode.
         return new ChromeFullscreenManager(this, ChromeFullscreenManager.CONTROLS_POSITION_TOP) {
             @Override
             public void enterPersistentFullscreenMode(FullscreenOptions options) {
-                if (mWebappInfo.displayMode() == WebDisplayMode.FULLSCREEN) return;
-                super.enterPersistentFullscreenMode(options);
+                // WebappActivity is always in fullscreen mode, prevent HTML5 fullscreen
+                return;
             }
 
             @Override
             public void exitPersistentFullscreenMode() {
-                if (mWebappInfo.displayMode() == WebDisplayMode.FULLSCREEN) return;
-                super.exitPersistentFullscreenMode();
+                // WebappActivity is always in fullscreen mode, prevent HTML5 fullscreen
+                return;
             }
 
             @Override
             public boolean getPersistentFullscreenMode() {
-                if (mWebappInfo.displayMode() == WebDisplayMode.FULLSCREEN) return false;
-                return super.getPersistentFullscreenMode();
+                // WebappActivity is always in fullscreen mode, prevent HTML5 fullscreen
+                return false;
             }
         };
     }
@@ -828,14 +827,13 @@ public class WebappActivity extends SingleTabActivity {
         int taskDescriptionColor =
                 ApiCompatibilityUtils.getColor(getResources(), R.color.default_primary_color);
 
-        // Don't use the brand color for the status bars if we're in display: fullscreen. This works
+        // Don't use the brand color for the status bars since we're in fullscreen mode. This works
         // around an issue where the status bars go transparent and can't be seen on top of the page
         // content when users swipe them in or they appear because the on-screen keyboard was
         // triggered.
         int statusBarColor = Color.BLACK;
-        if (mBrandColor != null && mWebappInfo.displayMode() != WebDisplayMode.FULLSCREEN) {
+        if (mBrandColor != null) {
             taskDescriptionColor = mBrandColor;
-            statusBarColor = ColorUtils.getDarkenedColorForStatusBar(mBrandColor);
             if (getToolbarManager() != null) {
                 getToolbarManager().updatePrimaryColor(mBrandColor, false);
             }
